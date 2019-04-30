@@ -37,9 +37,10 @@ module.exports = class GatsbyThemeComponentShadowingResolverPlugin {
       }
 
       // theme is the theme package from which we're requiring the relative component
-      const [theme] = matchingThemes
+      const [{ themeName: theme, themeDir }] = matchingThemes
+
       // get the location of the component relative to src/
-      const [, component] = request.path.split(path.join(theme, `src`))
+      const [, component] = request.path.split(path.join(themeDir, `src`))
 
       if (
         /**
@@ -137,13 +138,13 @@ module.exports = class GatsbyThemeComponentShadowingResolverPlugin {
 
   getMatchingThemesForPath(filepath) {
     // find out which theme's src/components dir we're requiring from
-    const allMatchingThemes = this.themes.filter(({ themeName }) =>
-      filepath.includes(path.join(themeName, `src`))
+    const allMatchingThemes = this.themes.filter(({ themeDir }) =>
+      filepath.includes(path.join(themeDir, `src`))
     )
 
     // The same theme can be included twice in the themes list causing multiple
     // matches. This case should only be counted as a single match for that theme.
-    return _.uniq(allMatchingThemes.map(({ themeName }) => themeName))
+    return _.uniqBy(allMatchingThemes, ({ themeName }) => themeName)
   }
 
   // given a theme name, return all of the possible shadow locations
@@ -165,10 +166,10 @@ module.exports = class GatsbyThemeComponentShadowingResolverPlugin {
     if (matchingThemes.length !== 1) {
       return false
     }
-    const [theme] = matchingThemes
+    const [{ themeName: theme, themeDir }] = matchingThemes
 
     // get the location of the component relative to src/
-    const [, component] = requestPath.split(path.join(theme, `src`))
+    const [, component] = requestPath.split(path.join(themeDir, `src`))
 
     // get list of potential shadow locations
     const shadowFiles = this.getBaseShadowDirsForThemes(theme)
