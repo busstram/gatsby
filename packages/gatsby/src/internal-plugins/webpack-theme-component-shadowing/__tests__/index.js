@@ -24,7 +24,12 @@ describe(`Component Shadowing`, () => {
           `a-component`
         )
       )
-    ).toEqual([`a-theme`])
+    ).toEqual([
+      {
+        themeDir: path.join(path.sep, `some`, `place`, `a-theme`),
+        themeName: `a-theme`,
+      },
+    ])
 
     expect(
       // request to a shadowed component in theme b
@@ -41,7 +46,12 @@ describe(`Component Shadowing`, () => {
           `a-component`
         )
       )
-    ).toEqual([`theme-b`])
+    ).toEqual([
+      {
+        themeDir: path.join(path.sep, `some`, `place`, `theme-b`),
+        themeName: `theme-b`,
+      },
+    ])
   })
 
   it(`can determine if the request path is in the shadow chain for the issuer`, () => {
@@ -128,6 +138,40 @@ describe(`Component Shadowing`, () => {
           `src`,
           `components`,
           `a-component`
+        ),
+        userSiteDir: path.join(path.sep, `some`),
+      })
+    ).toEqual(true)
+
+    const scopedMonorepoPlugin = new ShadowingPlugin({
+      themes: [`@foo/bar`, `@bar/foo`].map(name => {
+        return {
+          themeName: name,
+          themeDir: path.join(path.sep, `some`, `packages`, name.split(`/`)[1]),
+        }
+      }),
+    })
+    expect(
+      scopedMonorepoPlugin.requestPathIsIssuerShadowPath({
+        // issuer is in the user's site
+        issuerPath: path.join(
+          path.sep,
+          `some`,
+          `src`,
+          `@foo`,
+          `bar`,
+          `layouts`,
+          `MainLayout`
+        ),
+        // require'ing a file it is a "shadow child" of
+        requestPath: path.join(
+          path.sep,
+          `some`,
+          `packages`,
+          `@foo`,
+          `bar`,
+          `layouts`,
+          `MainLayout`
         ),
         userSiteDir: path.join(path.sep, `some`),
       })
